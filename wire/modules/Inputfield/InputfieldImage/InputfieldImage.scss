@@ -211,7 +211,8 @@ $focusPointCircleSize: 40px;
 	}
 
 	&__trash {
-		position: absolute;
+		position: relative;
+        float: left;
 		background: white;
 		padding: .2em .6em;
 		color: #aaa;
@@ -833,6 +834,7 @@ $focusPointCircleSize: 40px;
 			display: block !important;
 			top: 0;
 			right: 0;
+            float: right;
 		}
 		
 		&__edit {
