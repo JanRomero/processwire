@@ -2354,16 +2354,22 @@ class PageFinder extends Wire {
 		$user = $this->wire()->user; 
 		$language = $this->languages && $user && $user->language ? $user->language : null;
 	
-		// support `sort=a|b|c` in correct order (because orderby prepend used below)
-		if(count($values) > 1) $values = array_reverse($values); 
-		
+		$descending = null;
+		$sortFields = [];
+
 		foreach($values as $value) {
 
 			$fc = substr($value, 0, 1); 
 			$lc = substr($value, -1);
-			$descending = $fc == '-' || $lc == '-';
 			$value = trim($value, "-+"); 
 			$subValue = '';
+
+			// support `sort=-a|b|c` such that the null coalesced values of a, b, c will be ordered descendingly
+			// i.e. ORDER BY coalesce(a, b, c) DESC
+			// thus we only care about the first value’s prepended hyphen.
+			if ($descending === null)
+				$descending = $fc == '-';
+
 			// $terValue = ''; // not currently used, here for future use
 			
 			if($this->lastOptions['reverseSort']) $descending = !$descending;
@@ -2505,11 +2511,15 @@ class PageFinder extends Wire {
 			}
 	
 			if(is_string($value) && strlen($value)) {
-				if($descending) {
-					$query->orderby("$value DESC", true);
-				} else {
-					$query->orderby("$value", true);
-				}
+				$sortFields[] = $value;
+			}
+		}
+
+		if (count($sortFields) > 0) {
+			if($descending) {
+				$query->orderby('coalesce(' . implode(',', $sortFields) . ') DESC', true);
+			} else {
+				$query->orderby('coalesce(' . implode(',', $sortFields) . ')', true);
 			}
 		}
 	}
